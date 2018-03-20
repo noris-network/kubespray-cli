@@ -378,7 +378,10 @@ class OpenStack(Cloud):
                            'auto_ip': self.options['floating_ip'],
                            'security_groups': [os_security_group_name],
                            'nics': 'port-name={{ item }}',
-                           'image': self.options['image']},
+                           'image': self.options['image'],
+                           'boot_from_volume': True,
+                           'volume_size': self.options['%s_volume_size' % role]
+                       },
                        'register': 'os_%s' % role,
                        'with_items': os_instance_names}
                 )
