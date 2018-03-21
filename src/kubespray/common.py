@@ -119,18 +119,24 @@ def clone_kubespray_git_repo(options):
                     sys.exit(1)
         if not options['noclone']:
             clone_git_repo(
-                'kubespray', options['kubespray_path'], options['kubespray_git_repo']
+                'kubespray', options['kubespray_path'],
+                options['kubespray_git_repo'],
+                options.get('kubespray_tag')
             )
 
 
-def clone_git_repo(name, directory, git_repo):
+def clone_git_repo(name, directory, git_repo, tag=None):
     if which('git') is None:
         display.error('Cannot find git binary! check your installation')
         sys.exit(1)
     if os.path.isdir(directory):
         shutil.rmtree(directory)
     display.banner('CLONING %s GIT REPO' % name.upper())
-    cmd = ["git", "clone", git_repo, directory]
+    if tag:
+        cmd = ["git", "-b", "'v2.3.0'", "--single-branch", "--depth", "1",
+               git_repo, directory]
+    else:
+        cmd = ["git", "clone", git_repo, directory]
     rcode, emsg = run_command('Clone kubespray repository from github', cmd)
     if rcode != 0:
         display.error('Cannot clone kubespray repository from github')
