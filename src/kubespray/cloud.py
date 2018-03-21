@@ -379,7 +379,7 @@ class OpenStack(Cloud):
                            'security_groups': [os_security_group_name],
                            'nics': 'port-name={{ item }}',
                            'image': self.options['image'],
-                           'boot_from_volume': True,
+                           'boot_from_volume': self.options.get('%s_boot_from_volume' % role, True),
                            'volume_size': self.options['%s_volume_size' % role]
                        },
                        'register': 'os_%s' % role,
