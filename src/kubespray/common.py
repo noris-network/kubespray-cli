@@ -28,7 +28,13 @@ import string
 import getpass
 from ansible.utils.display import Display
 from subprocess import PIPE, STDOUT, Popen, CalledProcessError
+
 display = Display()
+
+try:
+    input = raw_input
+except NameError:
+    pass
 
 
 def which(program):
@@ -71,7 +77,7 @@ def query_yes_no(question, default="yes"):
         raise ValueError("Invalid default answer: '%s'" % default)
     while True:
         sys.stdout.write(question + prompt)
-        choice = raw_input().lower()
+        choice = input().lower()
         if default is not None and choice == '':
             return valid[default]
         elif choice in valid:
@@ -94,11 +100,12 @@ def get_logger(logfile, loglevel):
 
 def get_cluster_name():
     try:
-        word_site = "http://svnweb.freebsd.org/csrg/share/dict/words?view=co&content-type=text/plain"
+        word_site = ("http://svnweb.freebsd.org/csrg/share/dict/"
+                     "words?view=co&content-type=text/plain")
         response = requests.get(word_site)
         words = response.content.splitlines()
         cluster_name = random.choice(words).decode("utf-8")
-    except:
+    except requests.exceptions.RequestException:
         cluster_name = id_generator()
     if not re.match('^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$', cluster_name):
         get_cluster_name()
@@ -175,7 +182,7 @@ def validate_cidr(cidr, version):
     respectively.
     """
     try:
-        ip = netaddr.IPNetwork(cidr, version=version)
+        netaddr.IPNetwork(cidr, version=version)
         return True
     except (netaddr.core.AddrFormatError, ValueError, TypeError):
         return False
