@@ -13,7 +13,8 @@ requirements = [
     'markupsafe>=0.23',
     'pyasn1>=0.1.8',
     'boto>=2.40.0',
-    'apache-libcloud>=0.20.1'
+    'apache-libcloud>=0.20.1',
+    'ansible>=2.4.0'
 ]
 
 test_requirements = [
@@ -24,11 +25,11 @@ my_homedir = os.path.expanduser("~")
 
 setup(
     name='kubespray',
-    version='0.5.2',
+    version='0.6.0',
     description="Kubespray kubernetes cluster deployment",
     author="Smaine Kahlouch",
-    author_email='smainklh@gmail.com',
-    url='https://github.com/kubespray/kubespray-cli',
+    author_email='oz.tiram@noris.de',
+    url='https://github.com/noris-network/kubespray-cli',
     data_files=[
         (my_homedir, ['src/kubespray/files/.kubespray.yml'])
     ],
@@ -46,8 +47,9 @@ setup(
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
         'Natural Language :: English',
-        "Programming Language :: Python :: 2",
-        'Programming Language :: Python :: 2.7',
+        "Programming Language :: Python :: 3",
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
     test_suite='tests',
     tests_require=test_requirements
