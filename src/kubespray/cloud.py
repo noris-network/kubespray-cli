@@ -302,7 +302,11 @@ class OpenStack(Cloud):
         openstack_auth = {}
 
         for cred_arg in openstack_credential_args:
-            openstack_auth.update({cred_arg: self.options['os_%s' % cred_arg]})
+            openstack_auth.update({cred_arg:
+                                   os.environ.get("OS_%s" % cred_arg.upper(),
+                                                  self.options['os_%s' % cred_arg]
+                                                 )
+                                   })
 
         if 'os_domain_name' in self.options:
             openstack_auth.update({'domain_name': self.options['os_domain_name']})
@@ -324,7 +328,7 @@ class OpenStack(Cloud):
                    'auth': openstack_auth,
                    'name': os_security_group_name,
                    'description': 'Contains security rules for the Kubernetes cluster',
-                   'region_name': self.options['os_region_name'],
+                   'region_name': os.environ.get("OS_REGION_NAME", self.options['os_region_name']),
                    'state': 'present'}}
         )
         self.pbook_content[0]['tasks'].append(
@@ -333,7 +337,7 @@ class OpenStack(Cloud):
                    'auth': openstack_auth,
                    'security_group': os_security_group_name,
                    'protocol': '{{item}}',
-                   'region_name': self.options['os_region_name'],
+                   'region_name': os.environ.get("OS_REGION_NAME", self.options['os_region_name']),
                    'state': 'present'},
                'with_items': ['tcp', 'udp', 'icmp']}
         )
@@ -359,7 +363,7 @@ class OpenStack(Cloud):
                        'os_port': {
                            'auth': openstack_auth,
                            'name': '{{item}}',
-                           'region_name': self.options['os_region_name'],
+                           'region_name': os.environ.get("OS_REGION_NAME", self.options['os_region_name']),
                            'network': self.options['network'],
                            'allowed_address_pairs': [{'ip_address': self.options['kube_network']}],
                            'security_groups': [os_security_group_name],
