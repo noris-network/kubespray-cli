@@ -23,13 +23,16 @@ kubespray.cloud
 Run Instances on cloud providers and generate inventory
 """
 
-import sys
-import os
-import yaml
 import json
+import os
+import sys
+import yaml
+
 from kubespray.inventory import CfgInventory
-from kubespray.common import get_logger, query_yes_no, run_command, which, id_generator, get_cluster_name
+from kubespray.common import (get_logger, query_yes_no, run_command, which,
+                              id_generator, get_cluster_name)
 from ansible.utils.display import Display
+
 display = Display()
 playbook_exec = which('ansible-playbook')
 
@@ -43,6 +46,7 @@ class Cloud(object):
     '''
     Run Instances on cloud providers and generates inventory
     '''
+
     def __init__(self, options, cloud):
         self.options = options
         self.cloud = cloud
@@ -51,65 +55,70 @@ class Cloud(object):
         self.cparser = configparser.ConfigParser(allow_no_value=True)
         self.Cfg = CfgInventory(options, cloud)
         self.localcfg = os.path.join(
-            options['kubespray_path'],
-            'inventory/local.cfg'
+            options['kubespray_path'], 'inventory/local.cfg'
         )
-        self.instances = {'masters':
-                          {'file': os.path.join(
-                           options['kubespray_path'], 'masters_instances.json'),
-                           'json': None
-                           },
-                          'nodes':
-                          {'file': os.path.join(
-                           options['kubespray_path'], 'nodes_instances.json'),
-                           'json': None
-                           },
-                          'etcds':
-                          {'file': os.path.join(
-                           options['kubespray_path'], 'etcds_instances.json'),
-                           'json': None
-                           },
-                          }
+        self.instances = {
+            'masters': {
+                'file': os.path.join(
+                    options['kubespray_path'], 'masters_instances.json'
+                ),
+                'json': None,
+            },
+            'nodes': {
+                'file': os.path.join(
+                    options['kubespray_path'], 'nodes_instances.json'
+                ),
+                'json': None,
+            },
+            'etcds': {
+                'file': os.path.join(
+                    options['kubespray_path'], 'etcds_instances.json'
+                ),
+                'json': None,
+            },
+        }
         self.logger = get_logger(
-            options.get('logfile'),
-            options.get('loglevel')
+            options.get('logfile'), options.get('loglevel')
         )
-        self.pbook_content = [{
-            'gather_facts': False,
-            'hosts': 'localhost',
-            'become': False,
-            'tasks': []
-        }]
-        self.logger.debug('''
+        self.pbook_content = [
+            {
+                'gather_facts': False,
+                'hosts': 'localhost',
+                'become': False,
+                'tasks': [],
+            }
+        ]
+        self.logger.debug(
+            '''
              The following options were used to generate the inventory: %s
-             ''' % self.options)
+             ''' %
+            self.options
+        )
 
     def write_local_inventory(self):
         '''Generates inventory for local tasks'''
         self.cparser.add_section('local')
         self.cparser.set(
             'local',
-            'localhost ansible_python_interpreter=python2 ansible_connection=local'
+            'localhost ansible_python_interpreter=python2 ansible_connection=local',
         )
         try:
             with open(self.localcfg, 'wb') as f:
                 self.cparser.write(f)
         except IOError as e:
-            display.error(
-                'Cannot write inventory %s: %s'
-                % (self.localcfg, e)
-            )
+            display.error('Cannot write inventory %s: %s' % (self.localcfg, e))
             sys.exit(1)
 
     def write_playbook(self):
         '''Write the playbook for instances creation'''
         try:
             with open(self.playbook, "w") as pb:
-                pb.write(yaml.dump(self.pbook_content, default_flow_style=True))
+                pb.write(
+                    yaml.dump(self.pbook_content, default_flow_style=True)
+                )
         except IOError as e:
             display.error(
-                'Cant write the playbook %s: %s'
-                % (self.playbook, e)
+                'Cant write the playbook %s: %s' % (self.playbook, e)
             )
             sys.exit(1)
 
@@ -121,13 +130,21 @@ class Cloud(object):
                     self.instances['%s' % role]['json'] = json.load(f)
             else:
                 self.instances['%s' % role]['json'] = []
-        self.Cfg.write_inventory(self.instances['masters']['json'], self.instances['nodes']['json'], self.instances['etcds']['json'])
+        self.Cfg.write_inventory(
+            self.instances['masters']['json'],
+            self.instances['nodes']['json'],
+            self.instances['etcds']['json'],
+        )
 
     def create_instances(self):
         '''Run ansible-playbook for instances creation'''
         cmd = [
-            playbook_exec, '-i', self.localcfg, '-e',
-            'ansible_connection=local', self.playbook
+            playbook_exec,
+            '-i',
+            self.localcfg,
+            '-e',
+            'ansible_connection=local',
+            self.playbook,
         ]
         if not self.options['assume_yes']:
             count = 0
@@ -139,7 +156,9 @@ class Cloud(object):
                     '%s node(s) will be added to the current inventory %s' %
                     (count, self.inventorycfg)
                 )
-            if not query_yes_no('Create %s instances on %s ?' % (count, self.cloud)):
+            if not query_yes_no(
+                'Create %s instances on %s ?' % (count, self.cloud)
+            ):
                 display.display('Aborted', color='red')
                 sys.exit(1)
         rcode, emsg = run_command('Create %s instances' % self.cloud, cmd)
@@ -169,31 +188,56 @@ class AWS(Cloud):
                 k, v = kv.split("=")
                 self.options['instance_tags'][k] = v
         ec2_options = [
-            'aws_access_key', 'aws_secret_key', 'count', 'group_id',
-            'group', 'instance_type', 'instance_profile_name', 'key_name', 'vpc_subnet_id',
-            'image', 'instance_tags', 'assign_public_ip', 'region'
+            'aws_access_key',
+            'aws_secret_key',
+            'count',
+            'group_id',
+            'group',
+            'instance_type',
+            'instance_profile_name',
+            'key_name',
+            'vpc_subnet_id',
+            'image',
+            'instance_tags',
+            'assign_public_ip',
+            'region',
         ]
         # Define EC2 task
         for role in ['masters', 'nodes', 'etcds']:
             if '%s_count' % role in self.options.keys():
-                ec2_task = {'ec2': {},
-                            'name': 'Provision EC2 %s instances' % role,
-                            'register': 'ec2_%s' % role}
+                ec2_task = {
+                    'ec2': {},
+                    'name': 'Provision EC2 %s instances' % role,
+                    'register': 'ec2_%s' % role,
+                }
                 for opt in ec2_options:
                     if opt in self.options.keys():
                         d = {opt: self.options[opt]}
                         ec2_task['ec2'].update(d)
-                ec2_task['ec2'].update({'count': self.options['%s_count' % role]})
-                ec2_task['ec2'].update({'instance_type': self.options['%s_instance_type' % role]})
-                ec2_task['ec2'].update({'instance_profile_name': self.options['%s_instance_profile_name' % role]})
+                ec2_task['ec2'].update(
+                    {'count': self.options['%s_count' % role]}
+                )
+                ec2_task['ec2'].update(
+                    {'instance_type': self.options['%s_instance_type' % role]}
+                )
+                ec2_task['ec2'].update(
+                    {
+                        'instance_profile_name': self.options[
+                            '%s_instance_profile_name' % role
+                        ]
+                    }
+                )
                 ec2_task['ec2'].update({'wait': True})
                 self.pbook_content[0]['tasks'].append(ec2_task)
                 # Write ec2 instances json
                 self.pbook_content[0]['tasks'].append(
-                    {'name': 'Generate a file with ec2 instances list',
-                     'copy':
-                         {'dest': '%s' % self.instances['%s' % role]['file'],
-                          'content': '{{ec2_%s.instances}}' % role}}
+                    {
+                        'name': 'Generate a file with ec2 instances list',
+                        'copy': {
+                            'dest': '%s' % self.instances['%s' % role]['file'],
+                            'content': '{{ec2_%s.instances}}' % role,
+                        },
+                    }
                 )
                 # Wait for ssh task
                 if self.options['use_private_ip']:
@@ -201,13 +245,17 @@ class AWS(Cloud):
                 else:
                     instance_ip = '{{ item.public_ip }}'
                 self.pbook_content[0]['tasks'].append(
-                    {'local_action': {'host': '%s' % instance_ip,
-                                      'module': 'wait_for',
-                                      'port': 22,
-                                      'state': 'started',
-                                      'timeout': 600},
-                     'name': 'Wait until SSH is available',
-                     'with_items': '{{ec2_%s.instances}}' % role}
+                    {
+                        'local_action': {
+                            'host': '%s' % instance_ip,
+                            'module': 'wait_for',
+                            'port': 22,
+                            'state': 'started',
+                            'timeout': 600,
+                        },
+                        'name': 'Wait until SSH is available',
+                        'with_items': '{{ec2_%s.instances}}' % role,
+                    }
                 )
         self.write_local_inventory()
         self.write_playbook()
@@ -226,8 +274,16 @@ class GCE(Cloud):
             self.options['tags'] = ','.join(self.options['tags'])
         # Options list of ansible GCE module
         gce_options = [
-            'machine_type', 'image', 'zone', 'service_account_email',
-            'pem_file', 'credentials_file', 'project_id', 'tags', 'network', 'subnetwork'
+            'machine_type',
+            'image',
+            'zone',
+            'service_account_email',
+            'pem_file',
+            'credentials_file',
+            'project_id',
+            'tags',
+            'network',
+            'subnetwork',
         ]
         # Define instance names
         cluster_name = 'k8s-' + get_cluster_name()
@@ -238,14 +294,22 @@ class GCE(Cloud):
                     if self.options['add_node']:
                         current_inventory = self.Cfg.read_inventory()
                         cluster_name = '-'.join(
-                            current_inventory['all']['hosts'][0]['hostname'].split('-')[:-2]
+                            current_inventory['all']['hosts'][0][
+                                'hostname'
+                            ].split(
+                                '-'
+                            )[
+                                :-2
+                            ]
                         )
                         gce_instance_names.append(
                             cluster_name + '-%s' % id_generator()
                         )
                     elif 'cluster_name' in self.options.keys():
                         gce_instance_names.append(
-                            self.options['cluster_name'] + '-%s' % id_generator()
+                            self.options['cluster_name'] +
+                            '-%s' %
+                            id_generator()
                         )
                     else:
                         gce_instance_names.append(
@@ -253,22 +317,31 @@ class GCE(Cloud):
                         )
                 gce_instance_names = ','.join(gce_instance_names)
                 # Define GCE task
-                gce_task = {'gce': {},
-                            'name': 'Provision GCE %s instances' % role,
-                            'register': 'gce_%s' % role}
+                gce_task = {
+                    'gce': {},
+                    'name': 'Provision GCE %s instances' % role,
+                    'register': 'gce_%s' % role,
+                }
                 for opt in gce_options:
                     if opt in self.options.keys():
                         d = {opt: self.options[opt]}
                         gce_task['gce'].update(d)
-                gce_task['gce'].update({'machine_type': self.options['%s_machine_type' % role]})
-                gce_task['gce'].update({'instance_names': '%s' % gce_instance_names})
+                gce_task['gce'].update(
+                    {'machine_type': self.options['%s_machine_type' % role]}
+                )
+                gce_task['gce'].update(
+                    {'instance_names': '%s' % gce_instance_names}
+                )
                 self.pbook_content[0]['tasks'].append(gce_task)
                 # Write gce instances json
                 self.pbook_content[0]['tasks'].append(
-                    {'name': 'Generate a file with %s list' % role,
-                     'copy':
-                         {'dest': '%s' % self.instances['%s' % role]['file'],
-                          'content': '{{gce_%s.instance_data}}' % role}}
+                    {
+                        'name': 'Generate a file with %s list' % role,
+                        'copy': {
+                            'dest': '%s' % self.instances['%s' % role]['file'],
+                            'content': '{{gce_%s.instance_data}}' % role,
+                        },
+                    }
                 )
                 # Wait for ssh task
                 if self.options['use_private_ip']:
@@ -277,19 +350,24 @@ class GCE(Cloud):
                     instance_ip = '{{ item.public_ip }}'
 
                 self.pbook_content[0]['tasks'].append(
-                    {'local_action': {'host': '%s' % instance_ip,
-                                      'module': 'wait_for',
-                                      'port': 22,
-                                      'state': 'started',
-                                      'timeout': 600},
-                     'name': 'Wait until SSH is available',
-                     'with_items': '{{gce_%s.instance_data}}' % role}
+                    {
+                        'local_action': {
+                            'host': '%s' % instance_ip,
+                            'module': 'wait_for',
+                            'port': 22,
+                            'state': 'started',
+                            'timeout': 600,
+                        },
+                        'name': 'Wait until SSH is available',
+                        'with_items': '{{gce_%s.instance_data}}' % role,
+                    }
                 )
         self.write_local_inventory()
         self.write_playbook()
 
 
 class OpenStack(Cloud):
+
     def __init__(self, options):
         Cloud.__init__(self, options, 'openstack')
         self.options = options
@@ -298,18 +376,25 @@ class OpenStack(Cloud):
         data = self.options
         data.pop('func')
 
-        openstack_credential_args = ('auth_url', 'username', 'password', 'project_name')
+        openstack_credential_args = (
+            'auth_url', 'username', 'password', 'project_name'
+        )
         openstack_auth = {}
 
         for cred_arg in openstack_credential_args:
-            openstack_auth.update({cred_arg:
-                                   os.environ.get("OS_%s" % cred_arg.upper(),
-                                                  self.options['os_%s' % cred_arg]
-                                                 )
-                                   })
+            openstack_auth.update(
+                {
+                    cred_arg: os.environ.get(
+                        "OS_%s" % cred_arg.upper(),
+                        self.options['os_%s' % cred_arg],
+                    )
+                }
+            )
 
         if 'os_domain_name' in self.options:
-            openstack_auth.update({'domain_name': self.options['os_domain_name']})
+            openstack_auth.update(
+                {'domain_name': self.options['os_domain_name']}
+            )
 
         if self.options['floating_ip']:
             ip_type = 'public'
@@ -323,23 +408,33 @@ class OpenStack(Cloud):
         os_security_group_name = cluster_name + '-%s' % id_generator()
 
         self.pbook_content[0]['tasks'].append(
-            {'name': 'Create security group',
-               'os_security_group': {
-                   'auth': openstack_auth,
-                   'name': os_security_group_name,
-                   'description': 'Contains security rules for the Kubernetes cluster',
-                   'region_name': os.environ.get("OS_REGION_NAME", self.options['os_region_name']),
-                   'state': 'present'}}
+            {
+             'name': 'Create security group',
+             'os_security_group': {
+                 'auth': openstack_auth,
+                 'name': os_security_group_name,
+                 'description': 'Contains security rules for the Kubernetes cluster',
+                 'region_name': os.environ.get(
+                        "OS_REGION_NAME", self.options['os_region_name']
+                        ),
+                 'state': 'present',
+                },
+            }
         )
         self.pbook_content[0]['tasks'].append(
-            {'name': 'Add security rules',
-               'os_security_group_rule': {
-                   'auth': openstack_auth,
-                   'security_group': os_security_group_name,
-                   'protocol': '{{item}}',
-                   'region_name': os.environ.get("OS_REGION_NAME", self.options['os_region_name']),
-                   'state': 'present'},
-               'with_items': ['tcp', 'udp', 'icmp']}
+            {
+                'name': 'Add security rules',
+                'os_security_group_rule': {
+                    'auth': openstack_auth,
+                    'security_group': os_security_group_name,
+                    'protocol': '{{item}}',
+                    'region_name': os.environ.get(
+                        "OS_REGION_NAME", self.options['os_region_name']
+                    ),
+                    'state': 'present',
+                },
+                'with_items': ['tcp', 'udp', 'icmp'],
+            }
         )
 
         for role in ('masters', 'nodes', 'etcds'):
@@ -349,7 +444,13 @@ class OpenStack(Cloud):
                     if self.options['add_node']:
                         current_inventory = self.Cfg.read_inventory()
                         cluster_name = '-'.join(
-                            current_inventory['all']['hosts'][0]['hostname'].split('-')[:-1]
+                            current_inventory['all']['hosts'][0][
+                                'hostname'
+                            ].split(
+                                '-'
+                            )[
+                                :-1
+                            ]
                         )
                         os_instance_names.append(
                             cluster_name + '-%s' % id_generator()
@@ -359,53 +460,74 @@ class OpenStack(Cloud):
                             cluster_name + '-%s' % id_generator()
                         )
                 self.pbook_content[0]['tasks'].append(
-                    {'name': 'Create %s network ports' % role,
-                       'os_port': {
-                           'auth': openstack_auth,
-                           'name': '{{item}}',
-                           'region_name': os.environ.get("OS_REGION_NAME", self.options['os_region_name']),
-                           'network': self.options['network'],
-                           'allowed_address_pairs': [{'ip_address': self.options['kube_network']}],
-                           'security_groups': [os_security_group_name],
-                           'state': 'present'},
-                       'with_items': os_instance_names}
+                    {
+                        'name': 'Create %s network ports' % role,
+                        'os_port': {
+                            'auth': openstack_auth,
+                            'name': '{{item}}',
+                            'region_name': os.environ.get(
+                                "OS_REGION_NAME",
+                                self.options['os_region_name'],
+                            ),
+                            'network': self.options['network'],
+                            'allowed_address_pairs': [
+                                {'ip_address': self.options['kube_network']}
+                            ],
+                            'security_groups': [os_security_group_name],
+                            'state': 'present',
+                        },
+                        'with_items': os_instance_names,
+                    }
                 )
                 self.pbook_content[0]['tasks'].append(
-                    {'name': 'Provision OS %s instances' % role,
-                       'os_server': {
-                           'auth': openstack_auth,
-                           'name': '{{item}}',
-                           'state': 'present',
-                           'flavor': self.options['%s_flavor' % role],
-                           'key_name': self.options['sshkey'],
-                           'region_name': self.options['os_region_name'],
-                           'auto_ip': self.options['floating_ip'],
-                           'security_groups': [os_security_group_name],
-                           'nics': 'port-name={{ item }}',
-                           'image': self.options['image'],
-                           'boot_from_volume': self.options.get('%s_boot_from_volume' % role, True),
-                           'volume_size': self.options['%s_volume_size' % role]
-                       },
-                       'register': 'os_%s' % role,
-                       'with_items': os_instance_names}
+                    {
+                        'name': 'Provision OS %s instances' % role,
+                        'os_server': {
+                            'auth': openstack_auth,
+                            'name': '{{item}}',
+                            'state': 'present',
+                            'flavor': self.options['%s_flavor' % role],
+                            'key_name': self.options['sshkey'],
+                            'region_name': self.options['os_region_name'],
+                            'auto_ip': self.options['floating_ip'],
+                            'security_groups': [os_security_group_name],
+                            'nics': 'port-name={{ item }}',
+                            'image': self.options['image'],
+                            'boot_from_volume': self.options.get(
+                                '%s_boot_from_volume' % role, True
+                            ),
+                            'volume_size': self.options[
+                                '%s_volume_size' % role
+                            ],
+                        },
+                        'register': 'os_%s' % role,
+                        'with_items': os_instance_names,
+                    }
                 )
                 # Write os instances json
                 self.pbook_content[0]['tasks'].append(
-                    {'name': 'Generate a file with OS %s instances list' % role,
-                     'copy':
-                         {'dest': '%s' % self.instances[role]['file'],
-                          'content': '{{os_%s.results}}' % role}}
+                    {
+                        'name': 'Generate a file with OS %s instances list' %
+                        role,
+                        'copy': {
+                            'dest': '%s' % self.instances[role]['file'],
+                            'content': '{{os_%s.results}}' % role,
+                        },
+                    }
                 )
                 # Wait for ssh task
                 self.pbook_content[0]['tasks'].append(
-                    {'name': 'Wait until SSH is available',
-                       'wait_for': {
-                           'host': '{{item.openstack.%s_v4}}' % ip_type,
-                           'port': 22,
-                           'search_regex': 'SSH',
-                           'state': 'started',
-                           'delay': 10},
-                       'with_items': '{{os_%s.results}}' % role}
+                    {
+                        'name': 'Wait until SSH is available',
+                        'wait_for': {
+                            'host': '{{item.openstack.%s_v4}}' % ip_type,
+                            'port': 22,
+                            'search_regex': 'SSH',
+                            'state': 'started',
+                            'delay': 10,
+                        },
+                        'with_items': '{{os_%s.results}}' % role,
+                    }
                 )
         self.write_local_inventory()
         self.write_playbook()
