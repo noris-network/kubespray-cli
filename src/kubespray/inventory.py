@@ -32,7 +32,7 @@ display = Display()
 try:
     import configparser
 except ImportError:
-    import ConfigParser as configparser
+    import configparser as configparser
 
 
 class CfgInventory(object):
@@ -82,7 +82,7 @@ class CfgInventory(object):
                                  {'hostname': 'kube-master', 'hostvars': []}
                              ]},
                              }
-        for section in current_inventory.keys():
+        for section in list(current_inventory.keys()):
             for line, properties_str in read_cparser.items(section):
                 machine_part = line.split('#', 1)[0]  # get rid of comments parts
                 machine_part = line.split(None, 1)
@@ -220,14 +220,14 @@ class CfgInventory(object):
         '''Generates inventory'''
         inventory = self.format_inventory(masters, nodes, etcds)
         if not self.options['add_node']:
-            if (('masters_count' in self.options.keys() and len(masters) < 2) or
-               ('masters_count' not in self.options.keys() and len(nodes) < 2)):
+            if (('masters_count' in list(self.options.keys()) and len(masters) < 2) or
+               ('masters_count' not in list(self.options.keys()) and len(nodes) < 2)):
                 display.warning('You should set at least 2 masters')
-            if (('etcds_count' in self.options.keys() and len(etcds) < 3) or
-               ('etcds_count' not in self.options.keys() and len(nodes) < 3)):
+            if (('etcds_count' in list(self.options.keys()) and len(etcds) < 3) or
+               ('etcds_count' not in list(self.options.keys()) and len(nodes) < 3)):
                 display.warning('You should set at least 3 nodes for etcd clustering')
         open(self.inventorycfg, 'w').close()
-        for key, value in inventory.items():
+        for key, value in list(inventory.items()):
             self.cparser.add_section(key)
             for host in value['hosts']:
                 hostvars = str()

@@ -162,7 +162,7 @@ def run_command(description, cmd):
         )
         with proc.stdout:
             for line in iter(proc.stdout.readline, b''):
-                print(line),
+                print((line), end=' ')
         proc.wait()
         return(proc.returncode, None)
     except CalledProcessError as e:

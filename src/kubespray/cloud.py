@@ -39,7 +39,7 @@ playbook_exec = which('ansible-playbook')
 try:
     import configparser
 except ImportError:
-    import ConfigParser as configparser
+    import configparser as configparser
 
 
 class Cloud(object):
@@ -125,7 +125,7 @@ class Cloud(object):
     def write_inventory(self):
         '''Generate the inventory according the instances created'''
         for role in ['masters', 'nodes', 'etcds']:
-            if '%s_count' % role in self.options.keys():
+            if '%s_count' % role in list(self.options.keys()):
                 with open(self.instances['%s' % role]['file']) as f:
                     self.instances['%s' % role]['json'] = json.load(f)
             else:
@@ -149,7 +149,7 @@ class Cloud(object):
         if not self.options['assume_yes']:
             count = 0
             for role in ['masters', 'nodes', 'etcds']:
-                if '%s_count' % role in self.options.keys():
+                if '%s_count' % role in list(self.options.keys()):
                     count = count + self.options['%s_count' % role]
             if self.options['add_node']:
                 display.warning(
@@ -178,9 +178,9 @@ class AWS(Cloud):
         data.pop('func')
         # Options list of ansible EC2 module
         self.options['image'] = self.options['ami']
-        if 'security_group_id' in self.options.keys():
+        if 'security_group_id' in list(self.options.keys()):
             self.options['group_id'] = self.options['security_group_id']
-        if 'security_group_name' in self.options.keys():
+        if 'security_group_name' in list(self.options.keys()):
             self.options['group'] = self.options['security_group_name']
         if 'tags' in self.options:
             self.options['instance_tags'] = {}
@@ -204,14 +204,14 @@ class AWS(Cloud):
         ]
         # Define EC2 task
         for role in ['masters', 'nodes', 'etcds']:
-            if '%s_count' % role in self.options.keys():
+            if '%s_count' % role in list(self.options.keys()):
                 ec2_task = {
                     'ec2': {},
                     'name': 'Provision EC2 %s instances' % role,
                     'register': 'ec2_%s' % role,
                 }
                 for opt in ec2_options:
-                    if opt in self.options.keys():
+                    if opt in list(self.options.keys()):
                         d = {opt: self.options[opt]}
                         ec2_task['ec2'].update(d)
                 ec2_task['ec2'].update(
@@ -289,7 +289,7 @@ class GCE(Cloud):
         cluster_name = 'k8s-' + get_cluster_name()
         for role in ['masters', 'nodes', 'etcds']:
             gce_instance_names = list()
-            if '%s_count' % role in self.options.keys():
+            if '%s_count' % role in list(self.options.keys()):
                 for x in range(self.options['%s_count' % role]):
                     if self.options['add_node']:
                         current_inventory = self.Cfg.read_inventory()
@@ -305,7 +305,7 @@ class GCE(Cloud):
                         gce_instance_names.append(
                             cluster_name + '-%s' % id_generator()
                         )
-                    elif 'cluster_name' in self.options.keys():
+                    elif 'cluster_name' in list(self.options.keys()):
                         gce_instance_names.append(
                             self.options['cluster_name'] +
                             '-%s' %
@@ -323,7 +323,7 @@ class GCE(Cloud):
                     'register': 'gce_%s' % role,
                 }
                 for opt in gce_options:
-                    if opt in self.options.keys():
+                    if opt in list(self.options.keys()):
                         d = {opt: self.options[opt]}
                         gce_task['gce'].update(d)
                 gce_task['gce'].update(
@@ -403,7 +403,7 @@ class OpenStack(Cloud):
 
         # Define instance names
         cluster_name = 'k8s-' + get_cluster_name()
-        if 'cluster_name' in self.options.keys():
+        if 'cluster_name' in list(self.options.keys()):
             cluster_name = 'k8s-' + self.options['cluster_name']
         os_security_group_name = cluster_name + '-%s' % id_generator()
 
@@ -439,7 +439,7 @@ class OpenStack(Cloud):
 
         for role in ('masters', 'nodes', 'etcds'):
             os_instance_names = list()
-            if '%s_count' % role in self.options.keys():
+            if '%s_count' % role in list(self.options.keys()):
                 for x in range(self.options['%s_count' % role]):
                     if self.options['add_node']:
                         current_inventory = self.Cfg.read_inventory()

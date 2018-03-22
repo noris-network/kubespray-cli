@@ -84,7 +84,7 @@ class RunPlaybook(object):
             os.environ[v.split('=')[0]] = v.split('=')[1]
         # Store ssh identity
         try:
-            if 'ssh_key' in self.options.keys():
+            if 'ssh_key' in list(self.options.keys()):
                 cmd = ['ssh-add', os.path.realpath(self.options['ssh_key'])]
             else:
                 cmd = 'ssh-add'
@@ -125,7 +125,7 @@ class RunPlaybook(object):
             '-b', '--become-user=root', '-m', 'ping', 'all',
             '-i', self.inventorycfg
         ]
-        if 'sshkey' in self.options.keys():
+        if 'sshkey' in list(self.options.keys()):
             cmd = cmd + ['--private-key', self.options['sshkey']]
         if self.options['ask_become_pass']:
             cmd = cmd + ['--ask-become-pass']
@@ -189,12 +189,12 @@ class RunPlaybook(object):
             os.path.join(self.options['kubespray_path'], 'cluster.yml')
         ]
         # Configure network plugin if defined
-        if 'network_plugin' in self.options.keys():
+        if 'network_plugin' in list(self.options.keys()):
             cmd = cmd + ['-e',
                 'kube_network_plugin=%s' % self.options['network_plugin']
                 ]
         # Configure the network subnets pods and k8s services
-        if 'kube_network' in self.options.keys():
+        if 'kube_network' in list(self.options.keys()):
             if not validate_cidr(self.options['kube_network'], version=4):
                 display.error('Invalid Kubernetes network address')
                 self.kill_ssh_agent()
@@ -205,7 +205,7 @@ class RunPlaybook(object):
                 '-e', 'kube_pods_subnet=%s' % pods_network
             ]
         # Check optional apps
-        if 'apps_enabled' in self.options.keys():
+        if 'apps_enabled' in list(self.options.keys()):
             for app in self.options['apps_enabled']:
                 if app not in ['helm', 'netchecker', 'efk']:
                     display.error(
@@ -218,7 +218,7 @@ class RunPlaybook(object):
                 else:
                     cmd = cmd + ['-e', '%s_enabled=true' % app]
         # Set kubernetes version
-        if 'kube_version' in self.options.keys():
+        if 'kube_version' in list(self.options.keys()):
             available_kube_versions = self.read_kube_versions()
             if self.options['kube_version'] not in available_kube_versions:
                 display.error(
@@ -228,31 +228,31 @@ class RunPlaybook(object):
                 sys.exit(1)
             cmd = cmd + ['-e', 'kube_version=%s' % self.options['kube_version']]
         # Bootstrap
-        if 'coreos' in self.options.keys() and self.options['coreos']:
+        if 'coreos' in list(self.options.keys()) and self.options['coreos']:
             cmd = cmd + ['-e', 'bootstrap_os=coreos']
-        elif 'redhat' in self.options.keys() and self.options['redhat']:
+        elif 'redhat' in list(self.options.keys()) and self.options['redhat']:
             cmd = cmd + [
                 '-e', 'bootstrap_os=centos', '-e', 'ansible_os_family=RedHat'
             ]
-        elif 'ubuntu' in self.options.keys() and self.options['ubuntu']:
+        elif 'ubuntu' in list(self.options.keys()) and self.options['ubuntu']:
             cmd = cmd + ['-e', 'bootstrap_os=ubuntu']
         # Add root password for the apiserver
-        if 'k8s_passwd' in self.options.keys():
+        if 'k8s_passwd' in list(self.options.keys()):
             cmd = cmd + ['-e', 'kube_api_pwd=%s' % self.options['k8s_passwd']]
         # Ansible verbose mode
-        if 'verbose' in self.options.keys() and self.options['verbose']:
+        if 'verbose' in list(self.options.keys()) and self.options['verbose']:
             cmd = cmd + ['-vvvv']
         # Add privilege escalation password
         if self.options['ask_become_pass']:
             cmd = cmd + ['--ask-become-pass']
         # Add any additionnal Ansible option
-        if 'ansible_opts' in self.options.keys():
+        if 'ansible_opts' in list(self.options.keys()):
             cmd = cmd + self.options['ansible_opts'].split(' ')
         for cloud in ['aws', 'gce']:
             if self.options[cloud]:
                 cmd = cmd + ['-e', 'cloud_provider=%s' % cloud]
         self.check_ping()
-        if 'kube_network' in self.options.keys():
+        if 'kube_network' in list(self.options.keys()):
             display.display(
                 'Kubernetes services network : %s (%s IPs)'
                 % (svc_network.cidr, str(svc_network.size.real - 2)),

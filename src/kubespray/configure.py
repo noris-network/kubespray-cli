@@ -54,48 +54,48 @@ class Config(object):
 
     def default_values(self, args, config):
         # Set kubespray_path
-        if 'kubespray_path' not in config.keys() and args.kubespray_path is None:
+        if 'kubespray_path' not in list(config.keys()) and args.kubespray_path is None:
             config['kubespray_path'] = os.path.join(os.path.expanduser("~"), '.kubespray')
         arguments = dict(args._get_kwargs())
-        for key, value in arguments.items():
+        for key, value in list(arguments.items()):
             if value is not None:
                 config[key] = value
         # Set inventory_path
-        if 'inventory_path' not in config.keys() and args.inventory_path is None:
+        if 'inventory_path' not in list(config.keys()) and args.inventory_path is None:
             config['inventory_path'] = os.path.join(
                 config['kubespray_path'], 'inventory/inventory.cfg'
             )
         # Set logfile
-        if 'logfile' not in config.keys():
+        if 'logfile' not in list(config.keys()):
             config['logfile'] = os.path.join(config['kubespray_path'], 'kubespray.log')
         # Set default bool
         for v in ['use_private_ip', 'assign_public_ip']:
-            if v not in config.keys():
+            if v not in list(config.keys()):
                 config[v] = False
         # Set default instances type
         if args.func.__name__ == "aws":
-            if 'masters_instance_type' not in config.keys() and args.masters_instance_type is None:
+            if 'masters_instance_type' not in list(config.keys()) and args.masters_instance_type is None:
                 config['masters_instance_type'] = 't2.medium'
-            if 'nodes_instance_type' not in config.keys() and args.nodes_instance_type is None:
+            if 'nodes_instance_type' not in list(config.keys()) and args.nodes_instance_type is None:
                 config['nodes_instance_type'] = 't2.large'
-            if 'etcds_instance_type' not in config.keys() and args.etcds_instance_type is None:
+            if 'etcds_instance_type' not in list(config.keys()) and args.etcds_instance_type is None:
                 config['etcds_instance_type'] = 't2.small'
         # ----GCE
         if args.func.__name__ == "gce":
-            if 'masters_machine_type' not in config.keys() and args.masters_machine_type is None:
+            if 'masters_machine_type' not in list(config.keys()) and args.masters_machine_type is None:
                 config['masters_machine_type'] = 'n1-standard-2'
-            if 'nodes_machine_type' not in config.keys() and args.nodes_machine_type is None:
+            if 'nodes_machine_type' not in list(config.keys()) and args.nodes_machine_type is None:
                 config['nodes_machine_type'] = 'n1-standard-4'
-            if 'etcds_machine_type' not in config.keys() and args.etcds_machine_type is None:
+            if 'etcds_machine_type' not in list(config.keys()) and args.etcds_machine_type is None:
                 config['etcds_machine_type'] = 'n1-standard-1'
         # Conflicting options
         if args.func.__name__ == "aws":
-            if args.security_group_name and 'security_group_id' in config.keys():
+            if args.security_group_name and 'security_group_id' in list(config.keys()):
                 config.pop('security_group_id')
-            elif args.security_group_id and 'security_group_name' in config.keys():
+            elif args.security_group_id and 'security_group_name' in list(config.keys()):
                 config.pop('security_group_name')
         # Set kubernetes 'kube' password
-        if 'prompt_pwd' in config.keys() and config['prompt_pwd'] is True:
+        if 'prompt_pwd' in list(config.keys()) and config['prompt_pwd'] is True:
             pwd = read_password()
             config['k8s_passwd'] = pwd
         return(config)
