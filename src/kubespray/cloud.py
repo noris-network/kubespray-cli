@@ -386,10 +386,16 @@ class OpenStack(Cloud):
                 {
                     cred_arg: os.environ.get(
                         "OS_%s" % cred_arg.upper(),
-                        self.options['os_%s' % cred_arg],
+                        self.options.get('os_%s' % cred_arg),
                     )
                 }
             )
+
+        _diff = set(openstack_credential_args) - set(openstack_auth.keys())
+
+        if _diff:
+            print("%s not found in the configuration or environment" % _diff)
+            sys.exit(2)
 
         if 'os_domain_name' in self.options:
             openstack_auth.update(
