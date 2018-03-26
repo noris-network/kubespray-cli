@@ -146,6 +146,8 @@ class Cloud(object):
             'ansible_connection=local',
             self.playbook,
         ]
+        if self.options['ansible-opts']:
+            cmd = cmd + self.options['ansible-opts']
         if not self.options['assume_yes']:
             count = 0
             for role in ['masters', 'nodes', 'etcds']:
