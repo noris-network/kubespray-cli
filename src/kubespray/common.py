@@ -160,10 +160,15 @@ def run_command(description, cmd):
             cmd, stdout=PIPE, stderr=STDOUT,
             universal_newlines=True, shell=False
         )
-        with proc.stdout:
-            for line in iter(proc.stdout.readline, b''):
-                print((line), end=' ')
-        proc.wait()
+
+        while True:
+            output = proc.stdout.readline()
+            if output == '' and proc.poll() is not None:
+                break
+            if output:
+                print(output.strip())
+
+            proc.poll()
         return(proc.returncode, None)
     except CalledProcessError as e:
         display.error('%s: %s' % (description, e.output))
