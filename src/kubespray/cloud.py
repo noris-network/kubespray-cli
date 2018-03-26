@@ -103,7 +103,7 @@ class Cloud(object):
             'localhost ansible_python_interpreter=python2 ansible_connection=local',
         )
         try:
-            with open(self.localcfg, 'wb') as f:
+            with open(self.localcfg, 'w') as f:
                 self.cparser.write(f)
         except IOError as e:
             display.error('Cannot write inventory %s: %s' % (self.localcfg, e))
