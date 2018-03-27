@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # This file is part of Kubespray.
@@ -71,6 +71,7 @@ def deploy(options):
     Run = RunPlaybook(options)
     Run.ssh_prepare()
     Run.deploy_kubernetes()
+
 
 if __name__ == '__main__':
     # Main parser
