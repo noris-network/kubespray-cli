@@ -544,6 +544,8 @@ class OpenStack(Cloud):
                     "register": 'os_%s' % role,
                     }
 
+                net_id = self.options.get('os_network_id')
+                net_id = ",net-id=%s" % net_id if net_id else ""
                 os_server_item = {
                             'auth': openstack_auth,
                             'name': '{{item.name}}',
