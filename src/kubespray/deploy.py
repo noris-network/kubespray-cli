@@ -125,6 +125,8 @@ class RunPlaybook(object):
             '-b', '--become-user=root', '-m', 'ping', 'all',
             '-i', self.inventorycfg
         ]
+        if self.options.get('ansible-opts'):
+            cmd = cmd + self.options["ansible-opts"]
         if 'sshkey' in list(self.options.keys()):
             cmd = cmd + ['--private-key', self.options['sshkey']]
         if self.options['ask_become_pass']:
