@@ -22,7 +22,6 @@ kubespray.cloud
 
 Run Instances on cloud providers and generate inventory
 """
-
 import json
 import os
 import sys
@@ -33,8 +32,35 @@ from kubespray.common import (get_logger, query_yes_no, run_command, which,
                               id_generator, get_cluster_name)
 from ansible.utils.display import Display
 
+
+noalias_dumper = yaml.dumper.SafeDumper
+noalias_dumper.ignore_aliases = lambda self, data: True
+
 display = Display()
 playbook_exec = which('ansible-playbook')
+
+
+def chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
+
+
+def distribute_hosts(hosts_zones):
+    """
+    Given  [(['host1', 'host2', 'host3'], 'A'), (['host4', 'host5'], 'B')]
+    return:
+    [{name: host1, zone: A},
+     {name: host2, zone: A},
+     {name: host3, zone: A},
+     {name: host4, zone: B},
+     {name: host5, zone: B}]
+    """
+    for item in hosts_zones:
+        hosts, zone = item[0], item[1]
+        for host in hosts:
+            yield {"name": host, "zone": zone}
+
 
 try:
     import configparser
@@ -100,7 +126,6 @@ class Cloud(object):
         self.cparser.add_section('local')
         self.cparser.set(
             'local',
-        #    'localhost ansible_python_interpreter=python2 ansible_connection=local',
             'localhost ansible_connection=local',
         )
         try:
@@ -115,7 +140,8 @@ class Cloud(object):
         try:
             with open(self.playbook, "w") as pb:
                 pb.write(
-                    yaml.dump(self.pbook_content, default_flow_style=True)
+                    yaml.dump(self.pbook_content, default_flow_style=False,
+                              Dumper=noalias_dumper)
                 )
         except IOError as e:
             display.error(
@@ -165,6 +191,7 @@ class Cloud(object):
                 display.display('Aborted', color='red')
                 sys.exit(1)
 
+        display.display(" ".join(cmd))
         rcode, emsg = run_command('Create %s instances' % self.cloud, cmd)
         if rcode != 0:
             self.logger.critical('Cannot create instances: %s' % emsg)
@@ -489,19 +516,43 @@ class OpenStack(Cloud):
                         'with_items': os_instance_names,
                     }
                 )
-                self.pbook_content[0]['tasks'].append(
-                    {
-                        'name': 'Provision OS %s instances' % role,
-                        'os_server': {
+
+                host_zones = None
+                if self.options.get("os_availability_zones"):
+                    # brain fuck warning
+                    # this divides the lists of hosts into zones
+                    # >>> hosts
+                    # >>> ['host1', 'host2', 'host3', 'host4', 'host5']
+
+                    # >>> zones
+                    # >>> ['A', 'B']
+
+                    # >>> list(zip([hosts[i:i + n] for i in range(0, len(hosts), n)], zones))
+                    # >>> [(['host1', 'host2', 'host3'], 'A'), (['host4', 'host5'], 'B')]
+                    hosts, zones = os_instance_names, self.options['os_availability_zones']
+
+                    if len(zones) == len(hosts):
+                        host_zones = [{"name": k, "zone": v} for k,v in   zip(hosts, zones)]
+                    else:
+                        end = len(zones) + 1 if len(zones) % 2 else len(zones)
+                        host_zones = list(zip([hosts[i:i + end] for i in range(0, len(hosts), end)], zones))
+                        host_zones = list(distribute_hosts(host_zones))
+
+                provision_item = {
+                    "name": 'Provision OS %s instances' % role,
+                    "register": 'os_%s' % role,
+                    }
+
+                os_server_item = {
                             'auth': openstack_auth,
-                            'name': '{{item}}',
+                            'name': '{{item.name}}',
                             'state': 'present',
                             'flavor': self.options['%s_flavor' % role],
                             'key_name': self.options['sshkey'],
                             'region_name': self.options['os_region_name'],
                             'auto_ip': self.options['floating_ip'],
                             'security_groups': [os_security_group_name],
-                            'nics': 'port-name={{ item }}',
+                            'nics': 'port-name={{ item.name }}',
                             'image': self.options['image'],
                             'boot_from_volume': self.options.get(
                                 '%s_boot_from_volume' % role, True
@@ -510,11 +561,19 @@ class OpenStack(Cloud):
                                 '%s_volume_size' % role
                             ],
                             'userdata': self.options.get("userdata", "")
-                        },
-                        'register': 'os_%s' % role,
-                        'with_items': os_instance_names,
-                    }
-                )
+                            }
+
+                if host_zones:
+                    os_server_item["availability_zone"] = "{{item.zone}}"
+
+                    provision_item["os_server"] = os_server_item
+                    provision_item["loop"] = host_zones
+                else:
+                    provision_item["loop"] = [
+                        {"name": name} for name in os_instance_names]
+
+                self.pbook_content[0]['tasks'].append(provision_item)
+
                 # Write os instances json
                 self.pbook_content[0]['tasks'].append(
                     {

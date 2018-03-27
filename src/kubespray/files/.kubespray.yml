@@ -60,6 +60,9 @@ loglevel: "info"
 # image: "<os_image_name_or_id>"
 # network: "<os_network_name_or_id>"
 # sshkey: "<os_ssh_key_name>"
+# os_availability_zones:
+# - xxx-yyy-zzz
+# - aaa-bbb-ccc
 #
 # All the options to be passed to the 'ansible-playbook' command line
 # Note: 'serial=1' ansible option is a workaround for bug https://github.com/ansible/ansible/issues/17935 which causes installation to hang due to SSH multiplexing
