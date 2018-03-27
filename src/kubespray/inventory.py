@@ -236,7 +236,7 @@ class CfgInventory(object):
                     varlist.append("%s=%s" % (var['name'], var['value']))
                 hostvars = " ".join(varlist)
                 self.cparser.set(key, "%s\t\t%s" % (host['hostname'], hostvars))
-        with open(self.inventorycfg, 'wb') as configfile:
+        with open(self.inventorycfg, 'w') as configfile:
             display.banner('WRITTING INVENTORY')
             self.cparser.write(configfile)
             self.logger.info(
