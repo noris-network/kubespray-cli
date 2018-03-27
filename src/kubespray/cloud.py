@@ -147,8 +147,8 @@ class Cloud(object):
             'ansible_connection=local',
             self.playbook,
         ]
-        if self.options['ansible-opts']:
-            cmd = cmd + self.options['ansible-opts']
+        if self.options['ansible_opts']:
+            cmd = cmd + self.options['ansible_opts']
         if not self.options['assume_yes']:
             count = 0
             for role in ['masters', 'nodes', 'etcds']:
@@ -164,6 +164,7 @@ class Cloud(object):
             ):
                 display.display('Aborted', color='red')
                 sys.exit(1)
+
         rcode, emsg = run_command('Create %s instances' % self.cloud, cmd)
         if rcode != 0:
             self.logger.critical('Cannot create instances: %s' % emsg)
@@ -508,6 +509,7 @@ class OpenStack(Cloud):
                             'volume_size': self.options[
                                 '%s_volume_size' % role
                             ],
+                            'userdata': self.options.get("userdata", "")
                         },
                         'register': 'os_%s' % role,
                         'with_items': os_instance_names,
