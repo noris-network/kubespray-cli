@@ -451,7 +451,8 @@ class OpenStack(Cloud):
              'os_security_group': {
                  'auth': openstack_auth,
                  'name': os_security_group_name,
-                 'description': 'Contains security rules for the Kubernetes cluster',
+                 'description': ('Contains security rules for the Kubernetes'
+                                 ' cluster'),
                  'region_name': os.environ.get(
                         "OS_REGION_NAME", self.options['os_region_name']
                         ),
@@ -528,15 +529,19 @@ class OpenStack(Cloud):
                     # >>> zones
                     # >>> ['A', 'B']
 
-                    # >>> list(zip([hosts[i:i + n] for i in range(0, len(hosts), n)], zones))
-                    # >>> [(['host1', 'host2', 'host3'], 'A'), (['host4', 'host5'], 'B')]
-                    hosts, zones = os_instance_names, self.options['os_availability_zones']
+                    # >>> list(zip([hosts[i:i + n] for i in range(0, len(hosts), n)], zones)) # noqa
+                    # >>> [(['host1', 'host2', 'host3'], 'A'), (['host4', 'host5'], 'B')]  # noqa
+                    hosts, zones = os_instance_names, self.options[
+                        'os_availability_zones']
 
                     if len(zones) == len(hosts):
-                        host_zones = [{"name": k, "zone": v} for k,v in   zip(hosts, zones)]
+                        host_zones = [{"name": k, "zone": v} for
+                                      k, v in zip(hosts, zones)]
                     else:
                         end = len(zones) + 1 if len(zones) % 2 else len(zones)
-                        host_zones = list(zip([hosts[i:i + end] for i in range(0, len(hosts), end)], zones))
+                        host_zones = list(zip([hosts[i:i + end] for i in
+                                               range(0, len(hosts), end)],
+                                              zones))
                         host_zones = list(distribute_hosts(host_zones))
 
                 provision_item = {
