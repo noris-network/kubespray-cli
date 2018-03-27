@@ -157,6 +157,7 @@ class Cloud(object):
                     self.instances['%s' % role]['json'] = json.load(f)
             else:
                 self.instances['%s' % role]['json'] = []
+
         self.Cfg.write_inventory(
             self.instances['masters']['json'],
             self.instances['nodes']['json'],

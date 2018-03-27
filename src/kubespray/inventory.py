@@ -122,20 +122,26 @@ class CfgInventory(object):
             # handle masters
             new_instances = []
             for master in masters:
+                entry = master['item']
+                host_name = entry['name'] if isinstance(entry, dict) else entry
                 new_instances.append({'public_ip': master['openstack'][ip_type],
-                                      'name': master['item']})
+                                      'name': host_name})
             masters = new_instances
             # handle nodes
             new_instances = []
             for node in nodes:
+                entry = node['item']
+                host_name = entry['name'] if isinstance(entry, dict) else entry
                 new_instances.append({'public_ip': node['openstack'][ip_type],
-                                      'name': node['item']})
+                                      'name': host_name})
             nodes = new_instances
             # handle etcds
             new_instances = []
             for etcd in etcds:
+                entry = etcd['item']
+                host_name = entry['name'] if isinstance(entry, dict) else entry
                 new_instances.append({'public_ip': etcd['openstack'][ip_type],
-                                      'name': etcd['item']})
+                                      'name': host_name})
             etcds = new_instances
 
         if not self.options['add_node']:
