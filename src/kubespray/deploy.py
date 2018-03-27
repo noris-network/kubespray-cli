@@ -248,8 +248,8 @@ class RunPlaybook(object):
         if self.options['ask_become_pass']:
             cmd = cmd + ['--ask-become-pass']
         # Add any additionnal Ansible option
-        if 'ansible_opts' in list(self.options.keys()):
-            cmd = cmd + self.options['ansible_opts'].split(' ')
+        cmd = cmd + self.options.get('ansible_opts', [])
+
         for cloud in ['aws', 'gce']:
             if self.options[cloud]:
                 cmd = cmd + ['-e', 'cloud_provider=%s' % cloud]
