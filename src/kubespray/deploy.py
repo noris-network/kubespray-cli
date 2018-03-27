@@ -125,8 +125,8 @@ class RunPlaybook(object):
             '-b', '--become-user=root', '-m', 'ping', 'all',
             '-i', self.inventorycfg
         ]
-        if self.options.get('ansible-opts'):
-            cmd = cmd + self.options["ansible-opts"]
+        if self.options.get('ansible_opts'):
+            cmd = cmd + self.options["ansible_opts"]
         if 'sshkey' in list(self.options.keys()):
             cmd = cmd + ['--private-key', self.options['sshkey']]
         if self.options['ask_become_pass']:
@@ -192,8 +192,8 @@ class RunPlaybook(object):
         ]
         # Configure network plugin if defined
         if 'network_plugin' in list(self.options.keys()):
-            cmd = cmd + ['-e',
-                'kube_network_plugin=%s' % self.options['network_plugin']
+            cmd = cmd + [
+                '-e', 'kube_network_plugin=%s' % self.options['network_plugin']
                 ]
         # Configure the network subnets pods and k8s services
         if 'kube_network' in list(self.options.keys()):
