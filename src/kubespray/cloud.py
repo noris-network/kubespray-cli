@@ -440,9 +440,7 @@ class OpenStack(Cloud):
             ip_type = 'private'
 
         # Define instance names
-        cluster_name = 'k8s-' + get_cluster_name()
-        if 'cluster_name' in list(self.options.keys()):
-            cluster_name = 'k8s-' + self.options['cluster_name']
+        cluster_name = 'k8s-' + self.options['cluster_name']
         os_security_group_name = cluster_name + '-%s' % id_generator()
 
         self.pbook_content[0]['tasks'].append(
