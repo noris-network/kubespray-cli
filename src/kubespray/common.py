@@ -16,6 +16,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
+import getpass
 import logging
 import shutil
 import requests
@@ -25,7 +26,8 @@ import re
 import netaddr
 import sys
 import string
-import getpass
+
+from shutil import which
 from ansible.utils.display import Display
 from subprocess import PIPE, STDOUT, Popen, CalledProcessError
 
@@ -35,22 +37,6 @@ try:
     input = raw_input
 except NameError:
     pass
-
-
-def which(program):
-    def is_exe(fpath):
-        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-    fpath, fname = os.path.split(program)
-    if fpath:
-        if is_exe(program):
-            return program
-    else:
-        for path in os.environ["PATH"].split(os.pathsep):
-            path = path.strip('"')
-            exe_file = os.path.join(path, program)
-            if is_exe(exe_file):
-                return exe_file
-    return None
 
 
 def read_password():
