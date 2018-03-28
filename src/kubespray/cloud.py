@@ -24,6 +24,7 @@ Run Instances on cloud providers and generate inventory
 """
 import json
 import os
+import shutil
 import sys
 import yaml
 
@@ -197,6 +198,32 @@ class Cloud(object):
         if rcode != 0:
             self.logger.critical('Cannot create instances: %s' % emsg)
             sys.exit(1)
+
+    def update_group_vars(self):
+        """
+        Based on kubespray.yml we modify group_vars/all.yml
+        and group_vars/k8s-cluster.
+        """
+        custom_group_vars = self.options.get("custom_group_vars")
+        if not custom_group_vars:
+            return
+
+        group_vars_path = os.path.join(self.options['kubespray_path'],
+                                       "inventory", "group_vars")
+        for name, values in self.options["custom_group_vars"].items():
+            config_path = os.path.join(group_vars_path, name) + '.yml'
+            shutil.copy(config_path, config_path + ".orig")
+
+            config = yaml.load(open(config_path, 'r'))
+            config.update(values)
+
+            with open(config_path, 'w') as new_config:
+                new_config.write(
+                    yaml.dump(config, default_flow_style=False,
+                              Dumper=noalias_dumper))
+
+            display.display(
+                'Group vars updated: %s' % config_path, color='green')
 
 
 class AWS(Cloud):

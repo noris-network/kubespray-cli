@@ -49,7 +49,6 @@ clouds = {'aws': AWS, 'openstack': OpenStack, 'gce': GCE}
 
 
 def create_cloud_config(classname, options):
-    import pdb; pdb.set_trace()
     clone_kubespray_git_repo(options)
 
     klass = clouds.get(classname)
@@ -58,6 +57,7 @@ def create_cloud_config(classname, options):
     cloud_inst.gen_cloud_playbook()
     cloud_inst.create_instances()
     cloud_inst.write_inventory()
+    cloud_inst.update_group_vars()
 
 
 def deploy(options):
