@@ -28,15 +28,11 @@ import sys
 import string
 
 from shutil import which
+
 from ansible.utils.display import Display
 from subprocess import PIPE, STDOUT, Popen, CalledProcessError
 
 display = Display()
-
-try:
-    input = raw_input
-except NameError:
-    pass
 
 
 def read_password():
@@ -100,7 +96,8 @@ def get_cluster_name():
 
 def clone_kubespray_git_repo(options):
     if not options['add_node']:
-        if (os.path.isdir(options['kubespray_path']) and not options['assume_yes']
+        if (os.path.isdir(options['kubespray_path'])
+                and not options['assume_yes']
                 and not options['noclone']):
             display.warning(
                 'A directory %s already exists' % options['kubespray_path']
