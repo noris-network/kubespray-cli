@@ -24,7 +24,9 @@ import getpass
 try:
     from ansible.utils.display import Display
 except ImportError:
-    raise ImportError('Cannot find Ansible: Please check your installation (required version 2)')
+    raise ImportError(
+        'Cannot find Ansible: Please check your installation'
+        ' (required version 2)')
 from kubespray.common import clone_kubespray_git_repo
 from kubespray.configure import Config
 from kubespray.inventory import CfgInventory
@@ -61,10 +63,10 @@ def gce(options):
 
 def openstack(options):
     clone_kubespray_git_repo(options)
-    O = OpenStack(options)
-    O.gen_openstack_playbook()
-    O.create_instances()
-    O.write_inventory()
+    OS = OpenStack(options)
+    OS.gen_openstack_playbook()
+    OS.create_instances()
+    OS.write_inventory()
 
 
 def deploy(options):
@@ -90,7 +92,9 @@ if __name__ == '__main__':
     firststep_parser = argparse.ArgumentParser(add_help=False)
     firststep_parser.add_argument(
         '--noclone', default=False, action='store_true', dest='noclone',
-        help='Do not clone the git repo. Useful when the repo is already downloaded'
+        help=(
+            'Do not clone the git repo. '
+            'Useful when the repo is already downloaded')
     )
 
     # Options shared by all subparsers
@@ -104,12 +108,15 @@ if __name__ == '__main__':
         help="Config file path. Defaults to ~/.kubespray.yml"
     )
     parent_parser.add_argument(
-        '-y', '--assumeyes', default=False, dest='assume_yes', action='store_true',
-        help='When a yes/no prompt would be presented, assume that the user entered "yes"'
+        '-y', '--assumeyes', default=False, dest='assume_yes',
+        action='store_true',
+        help=('When a yes/no prompt would be presented,'
+              ' assume that the user entered "yes"')
     )
     parent_parser.add_argument(
         '-i', '--inventory', dest='inventory_path',
-        help='Inventory file path. Defaults to <path parameter>/inventory/inventory.cfg'
+        help=('Inventory file path. Defaults'
+              'to <path parameter>/inventory/inventory.cfg')
     )
 
     # prepare
@@ -117,16 +124,18 @@ if __name__ == '__main__':
         'prepare', parents=[parent_parser, firststep_parser],
         help='generate inventory and create vms on cloud providers'
     )
-    prepare_parser.add_argument('--add', dest='add_node', action='store_true',
-        help="Add node to an existing cluster"
-    )
+    prepare_parser.add_argument('--add',
+                                dest='add_node', action='store_true',
+                                help="Add node to an existing cluster")
+
     prepare_parser.add_argument(
         '--etcds', dest='etcds_list', metavar='N', nargs='+', default=[],
         help='Number of etcd, these instances will just act as etcd members'
     )
     prepare_parser.add_argument(
         '--masters', dest='masters_list', metavar='N', nargs='+', default=[],
-        help='Number of masters, these instances will not run workloads, master components only'
+        help=('Number of masters, these instances will not run workloads,'
+              ' master components only')
     )
     prepare_parser.add_argument(
         '--nodes', dest='nodes_list', metavar='N', nargs='+',
@@ -168,15 +177,18 @@ if __name__ == '__main__':
     )
     sg_group.add_argument(
         '--security-group-id', dest='security_group_id',
-        help='AWS security group ID. Uses the "default" security group if not specified.'
+        help=('AWS security group ID.'
+              ' Uses the "default" security group if not specified.')
     )
     aws_parser.add_argument(
-        '--assign-public-ip', default=None, dest='assign_public_ip', action='store_true',
-         help='when provisioning within vpc, assign a public IP address'
+        '--assign-public-ip', default=None, dest='assign_public_ip',
+        action='store_true',
+        help='when provisioning within vpc, assign a public IP address'
     )
     aws_parser.add_argument(
-        '--use-private-ip', default=None, dest='use_private_ip', action='store_true',
-         help='If set to true, using the private ip for SSH connection'
+        '--use-private-ip', default=None, dest='use_private_ip',
+        action='store_true',
+        help='If set to true, using the private ip for SSH connection'
     )
     aws_parser.add_argument('--vpc-id', dest='aws_vpc_id', help='EC2 VPC ID')
     aws_parser.add_argument(
@@ -187,9 +199,12 @@ if __name__ == '__main__':
         '--cluster-name', dest='cluster_name', help='Name of the cluster'
     )
     aws_parser.add_argument(
-        '--tags', dest='tags', help='List of VM tags of the form \'name=value\'', nargs="+", metavar="NAME=VALUE"
+        '--tags', dest='tags',
+        help='List of VM tags of the form \'name=value\'',
+        nargs="+", metavar="NAME=VALUE"
     )
-    aws_parser.add_argument('--add', dest='add_node', action='store_true',
+    aws_parser.add_argument(
+        '--add', dest='add_node', action='store_true',
         help="Add node to an existing cluster")
     aws_parser.add_argument(
         '--etcd', dest='etcds_count', type=int,
@@ -197,7 +212,8 @@ if __name__ == '__main__':
     )
     aws_parser.add_argument(
         '--masters', dest='masters_count', type=int,
-        help='Number of masters, these instances will not run workloads, master components only'
+        help=('Number of masters, these instances will not run workloads, '
+              'master components only')
     )
     aws_parser.add_argument(
         '--nodes', dest='nodes_count', type=int,
@@ -246,14 +262,15 @@ if __name__ == '__main__':
         '--tags', dest='tags', help='List of VM tags', nargs="+", metavar="TAG"
     )
     gce_parser.add_argument('--add', dest='add_node', action='store_true',
-        help="Add node to an existing cluster")
+                            help="Add node to an existing cluster")
     gce_parser.add_argument(
         '--etcd', dest='etcds_count', type=int,
         help='Number of etcd, these instances will just act as etcd members'
     )
     gce_parser.add_argument(
         '--masters', dest='masters_count', type=int,
-        help='Number of masters, these instances will not run workloads, master components only'
+        help=('Number of masters, these instances will'
+              ' not run workloads, master components only')
     )
     gce_parser.add_argument(
         '--nodes', dest='nodes_count', type=int,
@@ -267,7 +284,8 @@ if __name__ == '__main__':
         help='Create OpenStack instances and generate inventory'
     )
     openstack_parser.add_argument(
-        '--os_auth_url', dest='os_auth_url', help='OpenStack authentication URL'
+        '--os_auth_url', dest='os_auth_url',
+        help='OpenStack authentication URL'
     )
     openstack_parser.add_argument(
         '--os_username', dest='os_username', help='OpenStack Username'
@@ -277,7 +295,8 @@ if __name__ == '__main__':
         help='OpenStack Project Name'
     )
     openstack_parser.add_argument(
-        '--os_region_name', dest='os_region_name', help='OpenStack Region Name',
+        '--os_region_name', dest='os_region_name',
+        help='OpenStack Region Name',
         required=False
     )
     openstack_parser.add_argument(
@@ -289,7 +308,8 @@ if __name__ == '__main__':
     )
     openstack_parser.add_argument(
         '--masters', dest='masters_count', type=int,
-        help='Number of masters, these instances will not run workloads, master components only'
+        help=('Number of masters, these instances will not run workloads, '
+              'master components only')
     )
     openstack_parser.add_argument(
         '--nodes', dest='nodes_count', type=int,
@@ -300,10 +320,11 @@ if __name__ == '__main__':
     )
     openstack_parser.add_argument(
         '-N', '--kube-network', dest='kube_network', default='10.233.0.0/16',
-        help="""Network to be used inside the cluster (/16),
-             (must not overlap with any of your infrastructure networks and should be the same as in deploy).
-             default: 10.233.0.0/16"""
+        help=("Network to be used inside the cluster (/16),"
+              " must not overlap with any of your infrastructure networks and"
+              " should be the same as in deploy, default: 10.233.0.0/16")
     )
+
     openstack_parser.add_argument(
         '--add', dest='add_node', action='store_true', default=False,
         help='Add node to an existing cluster')
@@ -322,7 +343,8 @@ if __name__ == '__main__':
         '--etcds-flavor', dest='etcds_flavor',
         help='OpenStack instance flavor for Etcd members'
     )
-    openstack_parser.add_argument('--image', dest='image', help='Instance boot image')
+    openstack_parser.add_argument('--image', dest='image',
+                                  help='Instance boot image')
     openstack_parser.add_argument(
         '--floating_ip', dest='floating_ip', action='store_true',
         required=False, help='Associate public IP to instances'
@@ -346,7 +368,8 @@ if __name__ == '__main__':
         help='ssh key for authentication on remote servers'
     )
     deploy_parser.add_argument(
-        '-K', '--ask-become-pass', default=False, action='store_true', dest='ask_become_pass',
+        '-K', '--ask-become-pass', default=False, action='store_true',
+        dest='ask_become_pass',
         help='ask for privilege escalation password'
     )
     deploy_parser.add_argument(
@@ -355,11 +378,14 @@ if __name__ == '__main__':
     )
     deploy_parser.add_argument(
         '--passwd', dest='k8s_passwd',
-        help="Set the 'kube' passwd to authenticate to the API (default changeme')"
+        help=("Set the 'kube' passwd to authenticate to the API"
+              " (default changeme')")
     )
     deploy_parser.add_argument(
-        '-P', '--prompt-passwd', default=False, action='store_true', dest='prompt_pwd',
-        help="Set the 'kube' passwd to authenticate to the API (Interactive mode)"
+        '-P', '--prompt-passwd', default=False, action='store_true',
+        dest='prompt_pwd',
+        help=("Set the 'kube' passwd to authenticate to the"
+              " API (Interactive mode)")
     )
     deploy_parser.add_argument(
         '-V', '--kube-version', dest='kube_version',
