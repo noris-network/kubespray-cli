@@ -45,28 +45,19 @@ def prepare(options):
     )
 
 
-def aws(options):
+clouds = {'aws': AWS, 'openstack': OpenStack, 'gce': GCE}
+
+
+def create_cloud_config(classname, options):
+    import pdb; pdb.set_trace()
     clone_kubespray_git_repo(options)
-    A = AWS(options)
-    A.gen_ec2_playbook()
-    A.create_instances()
-    A.write_inventory()
 
+    klass = clouds.get(classname)
 
-def gce(options):
-    clone_kubespray_git_repo(options)
-    G = GCE(options)
-    G.gen_gce_playbook()
-    G.create_instances()
-    G.write_inventory()
-
-
-def openstack(options):
-    clone_kubespray_git_repo(options)
-    OS = OpenStack(options)
-    OS.gen_openstack_playbook()
-    OS.create_instances()
-    OS.write_inventory()
+    cloud_inst = klass(options)
+    cloud_inst.gen_cloud_playbook()
+    cloud_inst.create_instances()
+    cloud_inst.write_inventory()
 
 
 def deploy(options):
@@ -82,7 +73,7 @@ if __name__ == '__main__':
         description='%(prog)s Kubernetes cluster deployment tool',
         add_help=False
     )
-    subparsers = parser.add_subparsers(help='commands')
+    subparsers = parser.add_subparsers(help='commands', dest='subparser_name')
 
     parser.add_argument(
         '-v', '--version', action='version',
@@ -219,7 +210,6 @@ if __name__ == '__main__':
         '--nodes', dest='nodes_count', type=int,
         help='Number of nodes', required=True
     )
-    aws_parser.set_defaults(func=aws)
 
     # gce
     gce_parser = subparsers.add_parser(
@@ -276,7 +266,6 @@ if __name__ == '__main__':
         '--nodes', dest='nodes_count', type=int,
         help='Number of nodes', required=True
     )
-    gce_parser.set_defaults(func=gce)
 
     # openstack
     openstack_parser = subparsers.add_parser(
@@ -352,7 +341,6 @@ if __name__ == '__main__':
     openstack_parser.add_argument(
         '--cluster-name', dest='cluster_name', help='Name of the cluster'
     )
-    openstack_parser.set_defaults(func=openstack)
 
     # deploy
     deploy_parser = subparsers.add_parser(
@@ -446,4 +434,8 @@ if __name__ == '__main__':
     config = C.default_values(args, configfile_content)
     # Run functions with all the options
     os.environ['ANSIBLE_FORCE_COLOR'] = 'true'
-    args.func(config)
+
+    if args.subparser_name not in ['deploy', 'prepare']:
+        create_cloud_config(args.subparser_name, config)
+    else:
+        args.func(config)

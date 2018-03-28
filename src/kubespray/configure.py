@@ -45,7 +45,7 @@ class Config(object):
         try:
             with open(self.configfile, "r") as f:
                 config = yaml.load(f)
-        except:
+        except Exception:
             self.display.error(
                 "Can't read configuration file %s" % self.configfile
             )
@@ -68,20 +68,21 @@ class Config(object):
         # Set logfile
         if 'logfile' not in list(config.keys()):
             config['logfile'] = os.path.join(config['kubespray_path'], 'kubespray.log')
-        # Set default bool
+
+        # Set default bool
         for v in ['use_private_ip', 'assign_public_ip']:
             if v not in list(config.keys()):
                 config[v] = False
         # Set default instances type
-        if args.func.__name__ == "aws":
+        if args.subparser_name == "aws":
             if 'masters_instance_type' not in list(config.keys()) and args.masters_instance_type is None:
                 config['masters_instance_type'] = 't2.medium'
             if 'nodes_instance_type' not in list(config.keys()) and args.nodes_instance_type is None:
                 config['nodes_instance_type'] = 't2.large'
             if 'etcds_instance_type' not in list(config.keys()) and args.etcds_instance_type is None:
                 config['etcds_instance_type'] = 't2.small'
-        # ----GCE
-        if args.func.__name__ == "gce":
+
+        if args.subparser_name == "gce":
             if 'masters_machine_type' not in list(config.keys()) and args.masters_machine_type is None:
                 config['masters_machine_type'] = 'n1-standard-2'
             if 'nodes_machine_type' not in list(config.keys()) and args.nodes_machine_type is None:
@@ -89,7 +90,7 @@ class Config(object):
             if 'etcds_machine_type' not in list(config.keys()) and args.etcds_machine_type is None:
                 config['etcds_machine_type'] = 'n1-standard-1'
         # Conflicting options
-        if args.func.__name__ == "aws":
+        if args.subparser_name == "aws":
             if args.security_group_name and 'security_group_id' in list(config.keys()):
                 config.pop('security_group_id')
             elif args.security_group_id and 'security_group_name' in list(config.keys()):

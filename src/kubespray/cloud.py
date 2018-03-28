@@ -205,9 +205,10 @@ class AWS(Cloud):
         Cloud.__init__(self, options, "aws")
         self.options = options
 
+    def gen_cloud_playbook(self):
+        self.gen_ec2_playbook()
+
     def gen_ec2_playbook(self):
-        data = self.options
-        data.pop('func')
         # Options list of ansible EC2 module
         self.options['image'] = self.options['ami']
         if 'security_group_id' in list(self.options.keys()):
@@ -289,6 +290,7 @@ class AWS(Cloud):
                         'with_items': '{{ec2_%s.instances}}' % role,
                     }
                 )
+
         self.write_local_inventory()
         self.write_playbook()
 
@@ -299,9 +301,11 @@ class GCE(Cloud):
         Cloud.__init__(self, options, "gce")
         self.options = options
 
+    def gen_cloud_playbook(self):
+        self.gen_gce_playbook()
+
     def gen_gce_playbook(self):
-        data = self.options
-        data.pop('func')
+
         if 'tags' in self.options:
             self.options['tags'] = ','.join(self.options['tags'])
         # Options list of ansible GCE module
@@ -404,9 +408,10 @@ class OpenStack(Cloud):
         Cloud.__init__(self, options, 'openstack')
         self.options = options
 
+    def gen_cloud_playbook(self):
+        self.gen_openstack_playbook()
+
     def gen_openstack_playbook(self):
-        data = self.options
-        data.pop('func')
 
         openstack_credential_args = (
             'auth_url', 'username', 'password', 'project_name'
@@ -559,7 +564,7 @@ class OpenStack(Cloud):
                             'auto_ip': self.options['floating_ip'],
                             'security_groups': [os_security_group_name],
                             'nics': 'port-name={{ item.name }}' + net_id,
-                            'image': self.options['image'] ,
+                            'image': self.options['image'],
                             'boot_from_volume': self.options.get(
                                 '%s_boot_from_volume' % role, True
                             ),
