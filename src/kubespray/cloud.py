@@ -560,8 +560,8 @@ class OpenStack(Cloud):
                             'region_name': self.options['os_region_name'],
                             'auto_ip': self.options['floating_ip'],
                             'security_groups': [os_security_group_name],
-                            'nics': 'port-name={{ item.name }}',
-                            'image': self.options['image'],
+                            'nics': 'port-name={{ item.name }}' + net_id,
+                            'image': self.options['image'] ,
                             'boot_from_volume': self.options.get(
                                 '%s_boot_from_volume' % role, True
                             ),
