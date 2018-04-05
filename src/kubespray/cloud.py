@@ -581,6 +581,9 @@ class OpenStack(Cloud):
 
                 net_id = self.options.get('os_network_id')
                 net_id = ",net-id=%s" % net_id if net_id else ""
+                meta = "k8s-role=%s" % role
+                if '%s_meta' % role in self.options:
+                    meta = meta + "," + self.options.get("%s_meta" % role)
                 os_server_item = {
                             'auth': openstack_auth,
                             'name': '{{item.name}}',
@@ -596,10 +599,10 @@ class OpenStack(Cloud):
                                 '%s_boot_from_volume' % role, True
                             ),
                             'volume_size': self.options[
-                                '%s_volume_size' % role
-                            ],
+                                '%s_volume_size' % role],
+                            'meta': meta,
                             'userdata': self.options.get("userdata", "")
-                            }
+                           }
 
                 if host_zones:
                     os_server_item["availability_zone"] = "{{item.zone}}"
